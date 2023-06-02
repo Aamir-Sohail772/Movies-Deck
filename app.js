@@ -44,10 +44,19 @@ function toggleFavorite(movieId) {
     } else {
         movie.isFavourite = true;
    }
+   updateFavourites(movie);
    displayMovies(movieList);
 }
 
-
+function updateFavourites(movie){
+	let favourites = JSON.parse(localStorage.getItem('favourites')) || [];
+  if(movie.isFavourite){
+  	favourites.push(movie.id);
+  }else{
+  	favourites = favourites.filter(id => id != movie.id);
+  }
+  localStorage.setItem('favourites',JSON.stringify(favourites));
+}
 
 const showMore = (id, show) => {
     var showMoreButton = document.getElementById(`${id}-btn`);
@@ -94,7 +103,9 @@ function handleTabsChange(event){
 }
 
 const fetchMovies = async () => {
-    const data = await fetch(url);
+	try{
+	  console.log("Fetching the data");
+		const data = await fetch(url);
     const jsonData = await data.json();
     movieList = jsonData.results.map(
         (movie) =>
@@ -107,8 +118,27 @@ const fetchMovies = async () => {
             movie.poster_path
         )
     );
+    loadFavourites();
     displayMovies(movieList);
+	}catch(error){
+		console.log("Error: ", error);
+    const errorMessage = document.createElement('p');
+    errorMessage.textContent = "Sorry, something went wrong. Please check your internet connection and try again. ";
+    document.getElementById('card-display').appendChild(errorMessage);
+	}
+    
+   
 };
+
+function loadFavourites(){
+	const favourites = JSON.parse(localStorage.getItem('favourites'));
+	if(!favourites)return;
+  movieList.forEach((movie) => {
+			if(favourites.includes(movie.id)){
+      	movie.isFavourite = true;
+      }
+	})
+}
 
 function sortMovies(array, order) {
     if (order === "rating-asc") {
